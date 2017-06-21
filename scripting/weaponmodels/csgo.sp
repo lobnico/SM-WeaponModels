@@ -28,11 +28,11 @@ void WeaponModels_CSGOInit()
 
 public Action Command_LookAtWeapon(int client, const char[] command, int numArgs)
 {
-	if (g_ClientInfo[client][ClientInfo_CustomWeapon])
+	if (g_Cl_CustomWeapon[client])
 	{
-		int weaponIndex = g_ClientInfo[client][ClientInfo_WeaponIndex];
+		int weaponIndex = g_Cl_WeaponIndex[client];
 
-		if (g_WeaponModelInfo[weaponIndex][WeaponModelInfo_BlockLAW])
+		if (g_Weapon_BlockLAW[weaponIndex])
 		{
 			return Plugin_Handled;
 		}
@@ -59,7 +59,7 @@ public void RefreshViewModel(any client)
 		return;
 	}
 
-	if (g_ClientInfo[client][ClientInfo_CustomWeapon])
+	if (g_Cl_CustomWeapon[client])
 	{
 		int viewModel2 = GetPlayerViewModel(client, 1);
 
@@ -69,7 +69,7 @@ public void RefreshViewModel(any client)
 			AcceptEntityInput(viewModel2, "Kill");
 		}
 
-		SetPlayerViewModel(client, 1, EntRefToEntIndex(g_ClientInfo[client][ClientInfo_ViewModels][1]));
+		SetPlayerViewModel(client, 1, EntRefToEntIndex(g_Cl_ViewModels[client][1]));
 	}
 }
 
@@ -82,9 +82,9 @@ public void Event_WeaponFire(Event event, const char[] name, bool dontBrodcast)
 	int client = GetClientOfUserId(event.GetInt("userid"));
 	float gameTime = GetGameTime();
 
-	if (g_ClientInfo[client][ClientInfo_CustomWeapon])
+	if (g_Cl_CustomWeapon[client])
 	{
-		int viewModel2 = EntRefToEntIndex(g_ClientInfo[client][ClientInfo_ViewModels][1]);
+		int viewModel2 = EntRefToEntIndex(g_Cl_ViewModels[client][1]);
 
 		if (viewModel2 == -1)
 		{

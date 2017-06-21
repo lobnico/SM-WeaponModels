@@ -37,7 +37,7 @@ public int Native_AddWeaponByClassName(Handle plugin, int numParams)
 	for (int i = 0; i < MAX_CUSTOM_WEAPONS; i++)
 	{
 		// Check if class-name is already used
-		if (g_WeaponModelInfo[i][WeaponModelInfo_Status] != WeaponModelInfoStatus_Free && StrEqual(g_WeaponModelInfo[i][WeaponModelInfo_ClassName], className, false))
+		if (g_Weapon_Status[i] != STATUS_FREE && StrEqual(g_Weapon_ClassName[i], className, false))
 		{
 			if (CheckForwardCleanup(i))
 			{
@@ -61,9 +61,9 @@ public int Native_AddWeaponByClassName(Handle plugin, int numParams)
 	GetNativeString(2, viewModel, sizeof(viewModel));
 	GetNativeString(3, worldModel, sizeof(worldModel));
 
-	g_WeaponModelInfo[weaponIndex][WeaponModelInfo_DefIndex] = -1;
+	g_Weapon_DefIndex[weaponIndex] = -1;
 
-	strcopy(g_WeaponModelInfo[weaponIndex][WeaponModelInfo_ClassName], CLASS_NAME_MAX_LENGTH, className);
+	strcopy(g_Weapon_ClassName[weaponIndex], CLASS_NAME_MAX_LENGTH, className);
 
 	AddWeapon(weaponIndex, viewModel, worldModel, plugin, GetNativeCell(4));
 
@@ -84,7 +84,7 @@ public int Native_AddWeaponByItemDefIndex(Handle plugin, int numParams)
 	for (int i = 0; i < MAX_CUSTOM_WEAPONS; i++)
 	{
 		// Check if definition index is already used
-		if (g_WeaponModelInfo[i][WeaponModelInfo_Status] != WeaponModelInfoStatus_Free && g_WeaponModelInfo[i][WeaponModelInfo_DefIndex] == itemDefIndex)
+		if (g_Weapon_Status[i] != STATUS_FREE && g_Weapon_DefIndex[i] == itemDefIndex)
 		{
 			if (CheckForwardCleanup(i))
 			{
@@ -104,7 +104,7 @@ public int Native_AddWeaponByItemDefIndex(Handle plugin, int numParams)
 		return -1;
 	}
 
-	g_WeaponModelInfo[weaponIndex][WeaponModelInfo_DefIndex] = itemDefIndex;
+	g_Weapon_DefIndex[weaponIndex] = itemDefIndex;
 
 	char viewModel[PLATFORM_MAX_PATH + 1];
 	char worldModel[PLATFORM_MAX_PATH + 1];
@@ -123,20 +123,20 @@ void AddWeapon(int weaponIndex, const char[] viewModel, const char[] worldModel,
 
 	AddToForward(forwardHandle, plugin, _function);
 
-	g_WeaponModelInfo[weaponIndex][WeaponModelInfo_SequenceCount] = -1;
-	g_WeaponModelInfo[weaponIndex][WeaponModelInfo_Forward] = forwardHandle;
+	g_Weapon_SequenceCount[weaponIndex] = -1;
+	g_Weapon_Forward[weaponIndex] = forwardHandle;
 
-	strcopy(g_WeaponModelInfo[weaponIndex][WeaponModelInfo_ViewModel], PLATFORM_MAX_PATH + 1, viewModel);
-	strcopy(g_WeaponModelInfo[weaponIndex][WeaponModelInfo_WorldModel], PLATFORM_MAX_PATH + 1, worldModel);
+	strcopy(g_Weapon_ViewModel[weaponIndex], PLATFORM_MAX_PATH + 1, viewModel);
+	strcopy(g_Weapon_WorldModel[weaponIndex], PLATFORM_MAX_PATH + 1, worldModel);
 
 	PrecacheWeaponInfo(weaponIndex);
 
-	g_WeaponModelInfo[weaponIndex][WeaponModelInfo_Status] = WeaponModelInfoStatus_API;
+	g_Weapon_Status[weaponIndex] = STATUS_API;
 }
 
 bool CheckForwardCleanup(int weaponIndex)
 {
-	Handle forwardHandle = g_WeaponModelInfo[weaponIndex][WeaponModelInfo_Forward];
+	Handle forwardHandle = g_Weapon_Forward[weaponIndex];
 
 	if (forwardHandle != INVALID_HANDLE)
 	{
@@ -152,7 +152,7 @@ int GetFreeWeaponInfoIndex()
 {
 	for (int i = 0; i < MAX_CUSTOM_WEAPONS; i++)
 	{
-		if (g_WeaponModelInfo[i][WeaponModelInfo_Status] == WeaponModelInfoStatus_Free)
+		if (g_Weapon_Status[i] == STATUS_FREE)
 		{
 			return i;
 		}
@@ -170,31 +170,31 @@ public int Native_RemoveWeaponModel(Handle plugin, int numParams)
 		ThrowNativeError(SP_ERROR_INDEX, "Weapon index was invalid");
 	}
 
-	g_WeaponModelInfo[weaponIndex][WeaponModelInfo_Forward].Close();
+	g_Weapon_Forward[weaponIndex].Close();
 
 	if (!g_bEconomyWeapons)
 	{
 		CleanUpSwapWeapon(weaponIndex);
 	}
 	
-	g_WeaponModelInfo[weaponIndex][WeaponModelInfo_Status] = WeaponModelInfoStatus_Free;
+	g_Weapon_Status[weaponIndex] = STATUS_FREE;
 }
 
 bool ExecuteForward(int weaponIndex, int client, int weapon, const char[] className, int itemDefIndex = -1)
 {
-	Handle forwardHandle = g_WeaponModelInfo[weaponIndex][WeaponModelInfo_Forward];
+	Handle forwardHandle = g_Weapon_Forward[weaponIndex];
 
 	// Clean-up, if required
 	if (!GetForwardFunctionCount(forwardHandle))
 	{
 		CloseHandle(forwardHandle);
 
-		g_WeaponModelInfo[weaponIndex][WeaponModelInfo_Status] = WeaponModelInfoStatus_Free;
+		g_Weapon_Status[weaponIndex] = STATUS_FREE;
 
 		return false;
 	}
 
-	Call_StartForward(g_WeaponModelInfo[weaponIndex][WeaponModelInfo_Forward]);
+	Call_StartForward(g_Weapon_Forward[weaponIndex]);
 
 	Call_PushCell(weaponIndex);
 	Call_PushCell(client);
